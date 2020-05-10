@@ -18,27 +18,6 @@ devices:
   - /dev/sdq
   - /dev/sdr
 
-# Declare devices to be used as block.wal devices
-
-bluestore_wal_devices:
-  - /dev/nvme0n1p1
-  - /dev/nvme0n1p2
-  - /dev/nvme0n1p3
-  - /dev/nvme0n1p4
-  - /dev/nvme0n1p5
-  - /dev/nvme0n1p6
-  - /dev/nvme0n1p7
-  - /dev/nvme0n1p8
-  - /dev/nvme0n1p9
-  - /dev/nvme0n1p10
-  - /dev/nvme0n1p11
-  - /dev/nvme0n1p12
-  - /dev/nvme0n1p13
-  - /dev/nvme0n1p14
-  - /dev/nvme0n1p15
-  - /dev/nvme0n1p16
-
-
 # Declare devices to be used as block.db devices
 
 dedicated_devices:
@@ -58,3 +37,23 @@ dedicated_devices:
   - /dev/nvme1n1p14
   - /dev/nvme1n1p15
   - /dev/nvme1n1p16
+
+# Declare devices to be used as block.wal devices
+
+bluestore_wal_devices:
+  - /dev/nvme0n1p1
+  - /dev/nvme0n1p2
+  - /dev/nvme0n1p3
+  - /dev/nvme0n1p4
+  - /dev/nvme0n1p5
+  - /dev/nvme0n1p6
+  - /dev/nvme0n1p7
+  - /dev/nvme0n1p8
+  - /dev/nvme0n1p9
+  - /dev/nvme0n1p10
+  - /dev/nvme0n1p11
+  - /dev/nvme0n1p12
+  - /dev/nvme0n1p13
+  - /dev/nvme0n1p14
+  - /dev/nvme0n1p15
+  - /dev/nvme0n1p16
