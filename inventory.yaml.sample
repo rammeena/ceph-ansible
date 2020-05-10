@@ -1,0 +1,24 @@
+all:
+  children:
+    osds:
+      hosts:
+        ceph-osdnvm1-c7-33-fl:
+          ansible_host: 172.23.20.17
+        ceph-osdnvm2-c7-35-fl:
+          ansible_host: 172.23.20.39
+        ceph-osdnvm3-d9-35-fl:
+          ansible_host: 172.23.20.11
+        ceph-osdnvm4-d16-33-fl:
+          ansible_host: 172.23.20.12
+      vars:
+        ansible_user: centos
+    mons:
+      hosts:
+        ceph-mon1-c7-21-fl:
+          ansible_host: 172.23.20.14
+        ceph-mon2-d9-23-fl:
+          ansible_host: 172.23.20.15
+        ceph-mon3-d16-21-fl:
+          ansible_host: 172.23.20.14
+      vars:
+        ansible_user: centos
