@@ -13,7 +13,7 @@ devices:
   - /dev/sdk
   - /dev/sdl
   - /dev/sdm
-  - /dev/sdn
+  - /dev/sdo
   - /dev/sdp
   - /dev/sdq
   - /dev/sdr
