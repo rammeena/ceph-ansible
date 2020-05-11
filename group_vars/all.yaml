@@ -375,8 +375,8 @@ mon_host_v2:
 #hci_safety_factor: 0.2
 #non_hci_safety_factor: 0.7
 #osd_memory_target: 4294967296
-# journal_size: -1
-# block_db_size: -1 # block db size in bytes for the ceph-volume lvm batch. -1 means use the default of 'as big as possible'.
+journal_size: -1
+block_db_size: -1 # block db size in bytes for the ceph-volume lvm batch. -1 means use the default of 'as big as possible'.
 public_network: 172.23.20.0/24
 cluster_network: 172.23.21.0/24
 osd_mkfs_type: xfs
