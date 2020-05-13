@@ -55,7 +55,7 @@ osd_group_name: osds
 # rbdmirror_group_name: rbdmirrors
 # client_group_name: clients
 # iscsi_gw_group_name: iscsigws
-# mgr_group_name: mgrs
+mgr_group_name: mgrs
 # rgwloadbalancer_group_name: rgwloadbalancers
 # grafana_server_group_name: grafana-server
 
@@ -735,7 +735,7 @@ osd_objectstore: bluestore
 #############
 # DASHBOARD #
 #############
-dashboard_enabled: False
+dashboard_enabled: True
 # Choose http or https
 # For https, you should set dashboard.crt/key and grafana.crt/key
 # If you define the dashboard_crt and dashboard_key variables, but leave them as '',

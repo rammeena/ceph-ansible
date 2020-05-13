@@ -15,3 +15,9 @@ all:
         ceph-mon3-d16-21-fl:
       vars:
         ansible_user: centos
+    mgrs:
+      hosts:
+        ceph-mgr1-pod-vmm1-fl:
+        ceph-mgr2-pod-vmm1-fl:
+      vars:
+        ansible_user: centos
