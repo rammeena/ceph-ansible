@@ -21,6 +21,7 @@ all:
         ceph-mgr2-pod-vmm1-fl:
       vars:
         ansible_user: centos
+        mgr_server_addr: 0.0.0.0
     grafana-server:
       hosts:
         ceph-mgr1-pod-vmm1-fl:
