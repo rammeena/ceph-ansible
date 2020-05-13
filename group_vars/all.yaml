@@ -742,10 +742,10 @@ dashboard_enabled: True
 # then we will autogenerate a cert and keyfile
 #dashboard_protocol: http
 #dashboard_port: 8443
-#dashboard_admin_user: admin
+dashboard_admin_user: admin
 #dashboard_admin_user_ro: false
 # This variable must be set with a strong custom password when dashboard_enabled is True
-#dashboard_admin_password: p@ssw0rd
+dashboard_admin_password: Virtual650
 # We only need this for SSL (https) connections
 #dashboard_crt: ''
 #dashboard_key: ''
@@ -755,9 +755,9 @@ dashboard_enabled: True
 #dashboard_frontend_vip: ''
 #node_exporter_container_image: "docker.io/prom/node-exporter:v0.17.0"
 #node_exporter_port: 9100
-#grafana_admin_user: admin
+grafana_admin_user: admin
 # This variable must be set with a strong custom password when dashboard_enabled is True
-#grafana_admin_password: admin
+grafana_admin_password: Virtual650
 # We only need this for SSL (https) connections
 #grafana_crt: ''
 #grafana_key: ''
