@@ -12,7 +12,7 @@
   - mgrs
   # - iscsigws
   # - iscsi-gws # for backward compatibility only!
-  - grafana-server
+  - grafana_server
   # - rgwloadbalancers
 
   gather_facts: false
