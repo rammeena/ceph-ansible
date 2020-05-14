@@ -18,7 +18,7 @@ all:
     mgrs:
       hosts:
         ceph-mgr1-pod-vmm1-fl:
-        ceph-mgr2-pod-vmm1-fl:
+        # ceph-mgr2-pod-vmm1-fl:
       vars:
         ansible_user: centos
         mgr_server_addr: 0.0.0.0
