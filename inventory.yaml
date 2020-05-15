@@ -3,7 +3,7 @@ all:
     osds:
       hosts:
         ceph-osdnvm1-c7-33-fl:
-    #     ceph-osdnvm2-c7-35-fl:
+        ceph-osdnvm2-c7-35-fl:
     #     ceph-osdnvm3-d9-35-fl:
     #     # ceph-osdnvm4-d16-33-fl:
       vars:
