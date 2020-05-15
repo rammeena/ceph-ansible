@@ -8,10 +8,10 @@ devices:
   - /dev/sdg
   - /dev/sdh
   - /dev/sdi
-  - /dev/sdj
+  # - /dev/sdj
   - /dev/sdk
   - /dev/sdl
-  # - /dev/sdm
+  - /dev/sdm
   - /dev/sdn
   - /dev/sdo
   - /dev/sdp
