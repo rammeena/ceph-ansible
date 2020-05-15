@@ -760,6 +760,8 @@ dashboard_admin_password: Virtual650
 grafana_admin_user: admin
 # This variable must be set with a strong custom password when dashboard_enabled is True
 grafana_admin_password: Virtual650
+# Introducing a new variable to bind grafana service to 0.0.0.0 in grafana.ini
+grafana_ip: 0.0.0.0
 # We only need this for SSL (https) connections
 #grafana_crt: ''
 #grafana_key: ''

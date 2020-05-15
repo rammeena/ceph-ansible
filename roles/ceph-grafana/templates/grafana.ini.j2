@@ -21,7 +21,9 @@ cert_key = /etc/grafana/ceph-dashboard.key
 domain = {{ ansible_fqdn }}
 protocol = {{ dashboard_protocol }}
 http_port = {{ grafana_port }}
-http_addr = {{ grafana_server_addr }}
+{# below values is changed to 0.0.0.0 to bind grafana service to all #}
+{# this doesn't belog to original ceph-ansible code #}
+http_addr = {{ grafana_ip }}
 
 [security]
 admin_user = {{ grafana_admin_user }}
