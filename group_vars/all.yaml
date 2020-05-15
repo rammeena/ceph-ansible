@@ -740,8 +740,10 @@ dashboard_enabled: True
 # For https, you should set dashboard.crt/key and grafana.crt/key
 # If you define the dashboard_crt and dashboard_key variables, but leave them as '',
 # then we will autogenerate a cert and keyfile
-#dashboard_protocol: http
-#dashboard_port: 8443
+dashboard_protocol: http
+dashboard_port: 8443
+#bind dashboard to below IP or All IPs, since stgnet is differnet than mgmt network.
+dashboard_ip: 0.0.0.0
 dashboard_admin_user: admin
 #dashboard_admin_user_ro: false
 # This variable must be set with a strong custom password when dashboard_enabled is True

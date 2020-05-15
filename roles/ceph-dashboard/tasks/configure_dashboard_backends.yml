@@ -2,12 +2,25 @@
 - name: get current mgr backend - ipv4
   set_fact:
     mgr_server_addr: "{{ hostvars[dashboard_backend]['ansible_all_ipv4_addresses'] | ips_in_ranges(public_network.split(',')) | first }}"
-  when: ip_version == 'ipv4'
+  when: 
+    - ip_version == 'ipv4'
+    - dashboard_ip is undefined
 
 - name: get current mgr backend - ipv6
   set_fact:
     mgr_server_addr: "{{ hostvars[dashboard_backend]['ansible_all_ipv6_addresses'] | ips_in_ranges(public_network.split(',')) | last }}"
-  when: ip_version == 'ipv6'
+  when: 
+    - ip_version == 'ipv6'
+    - dashboard_ip is undefined
+
+- name: bind dashboard to IP from all.yaml
+  set_fact:
+    mgr_server_addr: "{{ dashboard_ip }}"
+  when: dashboard_ip is defined
+
+- name: ceph dashboard listen IP
+  debug:
+    msg: ceph dashboard will be listening on {{ mgr_server_addr }}
 
 - name: config the current dashboard backend
   command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} config set mgr mgr/dashboard/{{ hostvars[dashboard_backend]['ansible_hostname'] }}/server_addr {{ mgr_server_addr }}"
