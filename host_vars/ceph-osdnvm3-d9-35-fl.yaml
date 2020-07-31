@@ -9,11 +9,11 @@ devices:
   - /dev/sdh
   - /dev/sdi
   - /dev/sdj
-  # - /dev/sdk
+  - /dev/sdk
   - /dev/sdl
   - /dev/sdm
   - /dev/sdn
-  - /dev/sdo
+  # - /dev/sdo
   - /dev/sdp
   - /dev/sdq
   - /dev/sdr
