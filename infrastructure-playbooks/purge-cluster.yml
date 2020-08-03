@@ -61,6 +61,10 @@
     - block:
         - name: get nfs nodes ansible facts
           setup:
+            gather_subset:
+              - 'all'
+              - '!facter'
+              - '!ohai'
           delegate_to: "{{ item }}"
           delegate_facts: True
           with_items: "{{ groups[nfs_group_name] }}"
@@ -605,6 +609,29 @@
       - /var/lib/ceph/bootstrap-rbd
       - /var/lib/ceph/bootstrap-mgr
       - /var/lib/ceph/tmp
+
+- name: purge ceph-crash daemons
+  hosts:
+    - "{{ mon_group_name | default('mons') }}"
+    - "{{ osd_group_name | default('osds') }}"
+    - "{{ mds_group_name | default('mdss') }}"
+    - "{{ rgw_group_name | default('rgws') }}"
+    - "{{ rbdmirror_group_name | default('rbdmirrors') }}"
+    - "{{ mgr_group_name | default('mgrs') }}"
+  gather_facts: false
+  become: true
+  tasks:
+    - name: stop ceph-crash service
+      service:
+        name: ceph-crash.service
+        state: stopped
+        enabled: no
+      failed_when: false
+
+    - name: remove /var/lib/ceph/crash
+      file:
+        path: /var/lib/ceph/crash
+        state: absent
 
 
 - name: final cleanup - check any running ceph, purge ceph packages, purge config and remove data
