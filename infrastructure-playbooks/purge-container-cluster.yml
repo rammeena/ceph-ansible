@@ -45,6 +45,10 @@
     - block:
         - name: get nfs nodes ansible facts
           setup:
+            gather_subset:
+              - 'all'
+              - '!facter'
+              - '!ohai'
           delegate_to: "{{ item }}"
           delegate_facts: True
           with_items: "{{ groups[nfs_group_name] }}"
@@ -249,6 +253,10 @@
 
   - name: gather monitors facts
     setup:
+      gather_subset:
+        - 'all'
+        - '!facter'
+        - '!ohai'
     delegate_to: "{{ item }}"
     delegate_facts: True
     with_items: "{{ groups.get(mon_group_name | default('mons')) }}"
@@ -322,18 +330,6 @@
         - "{{ playbook_dir }}/group_vars/osds"
         - "{{ playbook_dir }}/group_vars/osds.yml"
         skip: true
-
-  - name: find all osd_disk_prepare logs
-    find:
-      paths: "{{ ceph_osd_docker_run_script_path | default('/usr/share') }}"
-      pattern: "ceph-osd-prepare-*.log"
-    register: osd_disk_prepare_logs
-
-  - name: ensure all osd_disk_prepare logs are removed
-    file:
-      path: "{{ item.path }}"
-      state: absent
-    with_items: "{{ osd_disk_prepare_logs.files }}"
 
 - name: purge ceph mon cluster
 
@@ -471,6 +467,35 @@
             - /etc/prometheus
           failed_when: false
       when: dashboard_enabled | bool
+
+- name: purge ceph-crash containers
+  hosts:
+    - "{{ mon_group_name | default('mons') }}"
+    - "{{ osd_group_name | default('osds') }}"
+    - "{{ mds_group_name | default('mdss') }}"
+    - "{{ rgw_group_name | default('rgws') }}"
+    - "{{ rbdmirror_group_name | default('rbdmirrors') }}"
+    - "{{ mgr_group_name | default('mgrs') }}"
+  gather_facts: false
+  become: true
+  tasks:
+    - name: stop ceph-crash container
+      service:
+        name: "ceph-crash@{{ ansible_hostname }}"
+        state: stopped
+        enabled: no
+      failed_when: false
+
+    - name: remove service file
+      file:
+        name: "/etc/systemd/system/ceph-crash.service"
+        state: absent
+      failed_when: false
+
+    - name: remove /var/lib/ceph/crash
+      file:
+        path: /var/lib/ceph/crash
+        state: absent
 
 - name: check container hosts
 

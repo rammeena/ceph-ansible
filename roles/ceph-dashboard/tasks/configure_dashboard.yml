@@ -25,6 +25,7 @@
         owner: root
         group: root
         mode: 0440
+      delegate_to: "{{ groups[mon_group_name][0] }}"
       when: dashboard_crt | length > 0
 
     - name: copy dashboard SSL certificate key
@@ -34,13 +35,39 @@
         owner: root
         group: root
         mode: 0440
+      delegate_to: "{{ groups[mon_group_name][0] }}"
       when: dashboard_key | length > 0
 
-    - name: generate a Self Signed OpenSSL certificate for dashboard
-      shell: |
-        test -f /etc/ceph/ceph-dashboard.key -a -f /etc/ceph/ceph-dashboard.crt || \
-        openssl req -new -nodes -x509 -subj '/O=IT/CN=ceph-dashboard' -days 3650 -keyout /etc/ceph/ceph-dashboard.key -out /etc/ceph/ceph-dashboard.crt -extensions v3_ca
+    - name: generate and copy self-signed certificate
       when: dashboard_key | length == 0 or dashboard_crt | length == 0
+      block:
+        - name: generate a Self Signed OpenSSL certificate for dashboard
+          shell: |
+            test -f /etc/ceph/ceph-dashboard.key -a -f /etc/ceph/ceph-dashboard.crt || \
+            openssl req -new -nodes -x509 -subj '/O=IT/CN=ceph-dashboard' -days 3650 -keyout /etc/ceph/ceph-dashboard.key -out /etc/ceph/ceph-dashboard.crt -extensions v3_ca
+          run_once: True
+
+        - name: slurp self-signed generated certificate for dashboard
+          slurp:
+            src: "/etc/ceph/{{ item }}"
+          run_once: True
+          with_items:
+            - 'ceph-dashboard.key'
+            - 'ceph-dashboard.crt'
+          register: slurp_self_signed_crt
+
+        - name: copy self-signed generated certificate on mons
+          copy:
+            dest: "{{ item.0.source }}"
+            content: "{{ item.0.content | b64decode }}"
+            owner: "{{ ceph_uid }}"
+            group: "{{ ceph_uid }}"
+            mode: "{{ '0600' if item.0.source.split('.')[-1] == 'key' else '0664' }}"
+          delegate_to: "{{ item.1 }}"
+          run_once: True
+          with_nested:
+            - "{{ slurp_self_signed_crt.results }}"
+            - "{{ groups[mon_group_name] }}"
 
     - name: import dashboard certificate file
       command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} config-key set mgr/dashboard/crt -i /etc/ceph/ceph-dashboard.crt"
@@ -66,6 +93,11 @@
   run_once: true
   changed_when: false
   failed_when: false # Do not fail if the option does not exist, it only exists post-14.2.0
+
+- include_tasks: configure_dashboard_backends.yml
+  with_items: '{{ groups[mgr_group_name] | default(groups[mon_group_name]) }}'
+  vars:
+    dashboard_backend: '{{ item }}'
 
 - name: disable mgr dashboard module (restart)
   command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} mgr module disable dashboard"
@@ -107,6 +139,15 @@
   run_once: true
   changed_when: false
 
+- name: disable ssl verification for grafana
+  command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-grafana-api-ssl-verify False"
+  delegate_to: "{{ groups[mon_group_name][0] }}"
+  run_once: true
+  changed_when: false
+  when:
+    - dashboard_protocol == "https"
+    - dashboard_grafana_api_no_ssl_verify | bool
+
 - name: set alertmanager host
   command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-alertmanager-api-host http://{{ grafana_server_addrs | first }}:{{ alertmanager_port }}"
   delegate_to: "{{ groups[mon_group_name][0] }}"
@@ -130,11 +171,6 @@
   run_once: true
   changed_when: false
   when: dashboard_frontend_vip is defined and dashboard_frontend_vip |length > 0
-
-- include_tasks: configure_dashboard_backends.yml
-  with_items: '{{ groups[mgr_group_name] | default(groups[mon_group_name]) }}'
-  vars:
-    dashboard_backend: '{{ item }}'
 
 - name: dashboard object gateway management frontend
   when: groups.get(rgw_group_name, []) | length > 0
