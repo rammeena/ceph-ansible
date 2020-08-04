@@ -9,8 +9,8 @@ devices:
   - /dev/sdh
   - /dev/sdi
   - /dev/sdj
-  - /dev/sdk
-  # - /dev/sdl
+  # - /dev/sdk
+  - /dev/sdl
   - /dev/sdm
   - /dev/sdn
   - /dev/sdo

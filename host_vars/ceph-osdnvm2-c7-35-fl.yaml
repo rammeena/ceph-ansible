@@ -13,10 +13,9 @@ devices:
   - /dev/sdl
   - /dev/sdm
   - /dev/sdn
-  - /dev/sdo
-  # - /dev/sdp
+  # - /dev/sdo
+  - /dev/sdp
   - /dev/sdq
-  # - /dev/sdr
 
 # Declare devices to be used as block.db devices
 dedicated_devices:
