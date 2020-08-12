@@ -252,8 +252,8 @@ ceph_stable_release: octopus
 # avoid cluttering up your ansible repo. If you set `generate_fsid` to
 # false, you *must* generate `fsid` in another way.
 # ACTIVATE THE FSID VARIABLE FOR NON-VAGRANT DEPLOYMENT
-#fsid: "{{ cluster_uuid.stdout }}"
-generate_fsid: true
+fsid: 58565fbb-43d0-47a7-9d22-de4c99707095
+generate_fsid: false
 
 ceph_conf_key_directory: /etc/ceph
 

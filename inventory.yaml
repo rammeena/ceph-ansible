@@ -2,7 +2,7 @@ all:
   children:
     osds:
       hosts:
-        ceph-osdssd1-c7-31-fl:
+        # ceph-osdssd1-c7-31-fl:
         ceph-osdssd2-d9-31-fl:
         ceph-osdssd3-d9-33-fl:
         ceph-osdssd4-d16-31-fl:
@@ -22,6 +22,6 @@ all:
         ansible_user: centos
     grafana-server:
       hosts:
-        ceph-monrgw2-d9-25-fl:
+        ceph2-grafana-pod-vmm2-fl:
       vars:
         ansible_user: centos
