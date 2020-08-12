@@ -16,12 +16,12 @@ all:
         ansible_user: centos
     mgrs:
       hosts:
-        ceph-mgr1-pod-vmm1-fl:
-        ceph-mgr2-pod-vmm2-fl:
+        ceph-monrgw1-d16-23-fl:
+        ceph-monrgw2-d9-25-fl:
       vars:
         ansible_user: centos
     grafana-server:
       hosts:
-        ceph-grafana-pod-vmm1-fl:
+        ceph-monrgw2-d9-25-fl:
       vars:
         ansible_user: centos
