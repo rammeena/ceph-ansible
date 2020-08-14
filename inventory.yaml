@@ -2,7 +2,7 @@ all:
   children:
     osds:
       hosts:
-        # ceph-osdssd1-c7-31-fl:
+        ceph-osdssd1-c7-31-fl:
         ceph-osdssd2-d9-31-fl:
         ceph-osdssd3-d9-33-fl:
         ceph-osdssd4-d16-31-fl:
