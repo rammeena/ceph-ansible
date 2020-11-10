@@ -5,10 +5,18 @@
   when: containerized_deployment | bool
 
 - name: disable SSL for dashboard
-  command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} config set mgr mgr/dashboard/ssl false"
+  when: dashboard_protocol == "http"
   delegate_to: "{{ groups[mon_group_name][0] }}"
   run_once: true
-  when: dashboard_protocol == "http"
+  block:
+   - name: get SSL status for dashboard
+     command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} config get mgr mgr/dashboard/ssl"
+     changed_when: false
+     register: current_ssl_for_dashboard
+
+   - name: disable SSL for dashboard
+     command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} config set mgr mgr/dashboard/ssl false"
+     when: current_ssl_for_dashboard.stdout == "true"
 
 - name: with SSL for dashboard
   when: dashboard_protocol == "https"
@@ -113,21 +121,17 @@
   run_once: true
   changed_when: false
 
-- name: set or update dashboard admin username and password
-  shell: |
-    if {{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard ac-user-show {{ dashboard_admin_user | quote }}; then
-      {{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard ac-user-set-password {{ dashboard_admin_user | quote }} {{ dashboard_admin_password | quote }}
-    else
-      {{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard ac-user-create {{ dashboard_admin_user | quote }} {{ dashboard_admin_password | quote }}
-    fi
-    {{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard ac-user-set-roles {{ dashboard_admin_user | quote }} {{ 'read-only' if dashboard_admin_user_ro | bool else 'administrator' }}
-  retries: 6
-  delay: 5
-  register: ac_result
-  delegate_to: "{{ groups[mon_group_name][0] }}"
+- name: create dashboard admin user
+  ceph_dashboard_user:
+    name: "{{ dashboard_admin_user }}"
+    cluster: "{{ cluster }}"
+    password: "{{ dashboard_admin_password }}"
+    roles: ["{{ 'read-only' if dashboard_admin_user_ro | bool else 'administrator' }}"]
   run_once: true
-  changed_when: false
-  until: ac_result.rc == 0
+  delegate_to: "{{ groups[mon_group_name][0] }}"
+  environment:
+    CEPH_CONTAINER_IMAGE: "{{ ceph_docker_registry + '/' + ceph_docker_image + ':' + ceph_docker_image_tag if containerized_deployment | bool else None }}"
+    CEPH_CONTAINER_BINARY: "{{ container_binary }}"
 
 - name: set grafana api user
   command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-grafana-api-username {{ grafana_admin_user }}"
@@ -176,94 +180,77 @@
 
 - name: dashboard object gateway management frontend
   when: groups.get(rgw_group_name, []) | length > 0
+  run_once: true
   block:
-    - name: get radosgw system user
-      command: "timeout --foreground -s KILL 20 {{ container_exec_cmd }} radosgw-admin --cluster {{ cluster }} user info --uid={{ dashboard_rgw_api_user_id }}"
-      register: get_rgw_user
-      until: get_rgw_user.rc == 0
-      retries: 3
-      delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
-      failed_when: false
-      changed_when: false
-
     - name: create radosgw system user
-      command: "timeout --foreground -s KILL 20 {{ container_exec_cmd }} radosgw-admin --cluster {{ cluster }} user create --uid={{ dashboard_rgw_api_user_id }} --display-name='Ceph dashboard' --system"
-      register: create_rgw_user
-      until: create_rgw_user.rc == 0
-      retries: 3
+      radosgw_user:
+        name: "{{ dashboard_rgw_api_user_id }}"
+        cluster: "{{ cluster }}"
+        display_name: "Ceph dashboard"
+        system: true
       delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
-      when:
-        - not rgw_multisite | bool or rgw_zonemaster | bool
-        - get_rgw_user.rc == 22
+      register: rgw_dashboard_user
+      environment:
+        CEPH_CONTAINER_IMAGE: "{{ ceph_docker_registry + '/' + ceph_docker_image + ':' + ceph_docker_image_tag if containerized_deployment | bool else None }}"
+        CEPH_CONTAINER_BINARY: "{{ container_binary }}"
 
     - name: get the rgw access and secret keys
       set_fact:
-        rgw_access_key: "{{ (create_rgw_user.stdout | default(get_rgw_user.stdout) | from_json)['keys'][0]['access_key'] }}"
-        rgw_secret_key: "{{ (create_rgw_user.stdout | default(get_rgw_user.stdout) | from_json)['keys'][0]['secret_key'] }}"
-      run_once: true
+        rgw_access_key: "{{ (rgw_dashboard_user.stdout | from_json)['keys'][0]['access_key'] }}"
+        rgw_secret_key: "{{ (rgw_dashboard_user.stdout | from_json)['keys'][0]['secret_key'] }}"
 
     - name: set the rgw user
       command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-rgw-api-user-id {{ dashboard_rgw_api_user_id }}"
       delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
       changed_when: false
 
     - name: set the rgw access key
       command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-rgw-api-access-key {{ rgw_access_key }}"
       delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
       changed_when: false
 
     - name: set the rgw secret key
       command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-rgw-api-secret-key {{ rgw_secret_key }}"
       delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
       changed_when: false
 
     - name: set the rgw host
       command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-rgw-api-host {{ hostvars[groups[rgw_group_name][0]]['rgw_instances'][0]['radosgw_address'] }}"
       changed_when: false
       delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
 
     - name: set the rgw port
       command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-rgw-api-port {{ hostvars[groups[rgw_group_name][0]]['rgw_instances'][0]['radosgw_frontend_port'] }}"
       changed_when: false
       delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
 
     - name: set the rgw scheme
       command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-rgw-api-scheme {{ 'https' if radosgw_frontend_ssl_certificate else 'http' }}"
       changed_when: false
       delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
 
     - name: set the rgw admin resource
       command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-rgw-api-admin-resource {{ dashboard_rgw_api_admin_resource }}"
       changed_when: false
       delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
       when: dashboard_rgw_api_admin_resource | length > 0
 
     - name: disable ssl verification for rgw
       command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-rgw-api-ssl-verify False"
       changed_when: false
       delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
       when:
         - dashboard_rgw_api_no_ssl_verify | bool
         - radosgw_frontend_ssl_certificate | length > 0
 
 - name: dashboard iscsi management
   when: groups.get(iscsi_gw_group_name, []) | length > 0
+  run_once: true
   block:
     - name: disable iscsi api ssl verification
       command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} dashboard set-iscsi-api-ssl-verification false"
       changed_when: false
       delegate_to: "{{ groups[mon_group_name][0] }}"
-      run_once: true
       when:
         - api_secure | default(false) | bool
         - generate_crt | default(false) | bool
@@ -273,7 +260,6 @@
       changed_when: false
       delegate_to: "{{ groups[mon_group_name][0] }}"
       with_items: "{{ groups[iscsi_gw_group_name] }}"
-      run_once: true
       when: ip_version == 'ipv4'
 
     - name: add iscsi gateways - ipv6
@@ -281,7 +267,6 @@
       changed_when: false
       delegate_to: "{{ groups[mon_group_name][0] }}"
       with_items: "{{ groups[iscsi_gw_group_name] }}"
-      run_once: true
       when: ip_version == 'ipv6'
 
 - name: disable mgr dashboard module (restart)

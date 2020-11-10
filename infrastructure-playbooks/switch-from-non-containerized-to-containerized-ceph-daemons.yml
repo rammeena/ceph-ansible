@@ -80,11 +80,13 @@
 
     - name: remove old systemd unit files
       file:
-        path: /usr/lib/systemd/system/{{ item }}
+        path: "{{ item }}"
         state: absent
       with_items:
-        - ceph-mon@.service
-        - ceph-mon.target
+        - /usr/lib/systemd/system/ceph-mon@.service
+        - /usr/lib/systemd/system/ceph-mon.target
+        - /lib/systemd/system/ceph-mon@.service
+        - /lib/systemd/system/ceph-mon.target
 
     - import_role:
         name: ceph-defaults
@@ -133,7 +135,7 @@
 
   post_tasks:
     - name: waiting for the monitor to join the quorum...
-      command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} -s --format json"
+      command: "{{ container_exec_cmd }} ceph --cluster {{ cluster }} quorum_status --format json"
       register: ceph_health_raw
       until: >
         hostvars[mon_host]['ansible_hostname'] in (ceph_health_raw.stdout | from_json)["quorum_names"]
@@ -163,11 +165,13 @@
 
     - name: remove old systemd unit files
       file:
-        path: /usr/lib/systemd/system/{{ item }}
+        path: "{{ item }}"
         state: absent
       with_items:
-        - ceph-mgr@.service
-        - ceph-mgr.target
+        - /usr/lib/systemd/system/ceph-mgr@.service
+        - /usr/lib/systemd/system/ceph-mgr.target
+        - /lib/systemd/system/ceph-mgr@.service
+        - /lib/systemd/system/ceph-mgr.target
 
     - import_role:
         name: ceph-defaults
@@ -252,6 +256,9 @@
         - /usr/lib/systemd/system/ceph-osd.target
         - /usr/lib/systemd/system/ceph-osd@.service
         - /usr/lib/systemd/system/ceph-volume@.service
+        - /lib/systemd/system/ceph-osd.target
+        - /lib/systemd/system/ceph-osd@.service
+        - /lib/systemd/system/ceph-volume@.service
 
     - import_role:
         name: ceph-facts
@@ -260,7 +267,7 @@
     # The file module has to run checks on current ownership of all directories and files. This is unnecessary
     # as in this case we know we want all owned by ceph user
     - name: set proper ownership on ceph directories
-      command: "find /var/lib/ceph /etc/ceph -not -( -user {{ ceph_uid }} -or -group {{ ceph_uid }} -) -execdir chown {{ ceph_uid }}:{{ ceph_uid }} {} +"
+      command: "find /var/lib/ceph /etc/ceph -not -( -user {{ ceph_uid }} -or -group {{ ceph_uid }} -) -execdir chown -h {{ ceph_uid }}:{{ ceph_uid }} {} +"
       changed_when: false
 
     - name: check for existing old leveldb file extension (ldb)
@@ -313,12 +320,12 @@
   post_tasks:
     - name: container - waiting for clean pgs...
       command: >
-        {{ container_binary }} exec ceph-mon-{{ hostvars[groups[mon_group_name][0]]['ansible_hostname'] }} ceph --cluster {{ cluster }} -s --format json
+        {{ container_binary }} exec ceph-mon-{{ hostvars[groups[mon_group_name][0]]['ansible_hostname'] }} ceph --cluster {{ cluster }} pg stat --format json
       register: ceph_health_post
       until: >
-        (((ceph_health_post.stdout | from_json).pgmap.pgs_by_state | length) > 0)
+        (((ceph_health_post.stdout | from_json).pg_summary.num_pg_by_state | length) > 0)
         and
-        (((ceph_health_post.stdout | from_json).pgmap.pgs_by_state | selectattr('state_name', 'search', '^active\\+clean') | map(attribute='count') | list | sum) == (ceph_health_post.stdout | from_json).pgmap.num_pgs)
+        (((ceph_health_post.stdout | from_json).pg_summary.num_pg_by_state | selectattr('name', 'search', '^active\\+clean') | map(attribute='num') | list | sum) == (ceph_health_post.stdout | from_json).pg_summary.num_pgs)
       delegate_to: "{{ groups[mon_group_name][0] }}"
       retries: "{{ health_osd_check_retries }}"
       delay: "{{ health_osd_check_delay }}"
@@ -360,11 +367,13 @@
 
     - name: remove old systemd unit files
       file:
-        path: /usr/lib/systemd/system/{{ item }}
+        path: "{{ item }}"
         state: absent
       with_items:
-        - ceph-mds@.service
-        - ceph-mds.target
+        - /usr/lib/systemd/system/ceph-mds@.service
+        - /usr/lib/systemd/system/ceph-mds.target
+        - /lib/systemd/system/ceph-mds@.service
+        - /lib/systemd/system/ceph-mds.target
 
     - import_role:
         name: ceph-defaults
@@ -431,11 +440,13 @@
 
     - name: remove old systemd unit files
       file:
-        path: /usr/lib/systemd/system/{{ item }}
+        path: "{{ item }}"
         state: absent
       with_items:
-        - ceph-radosgw@.service
-        - ceph-radosgw.target
+        - /usr/lib/systemd/system/ceph-radosgw@.service
+        - /usr/lib/systemd/system/ceph-radosgw.target
+        - /lib/systemd/system/ceph-radosgw@.service
+        - /lib/systemd/system/ceph-radosgw.target
 
     - import_role:
         name: ceph-handler
@@ -469,11 +480,13 @@
 
     - name: remove old systemd unit files
       file:
-        path: /usr/lib/systemd/system/{{ item }}
+        path: "{{ item }}"
         state: absent
       with_items:
-        - ceph-rbd-mirror@.service
-        - ceph-rbd-mirror.target
+        - /usr/lib/systemd/system/ceph-rbd-mirror@.service
+        - /usr/lib/systemd/system/ceph-rbd-mirror.target
+        - /lib/systemd/system/ceph-rbd-mirror@.service
+        - /lib/systemd/system/ceph-rbd-mirror.target
 
     - import_role:
         name: ceph-defaults

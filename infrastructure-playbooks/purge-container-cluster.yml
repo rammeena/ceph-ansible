@@ -300,7 +300,7 @@
       wal_vg: "{{ item.wal_vg|default(omit) }}"
       action: "zap"
     environment:
-      CEPH_VOLUME_DEBUG: 1
+      CEPH_VOLUME_DEBUG: "{{ ceph_volume_debug }}"
       CEPH_CONTAINER_IMAGE: "{{ ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}"
       CEPH_CONTAINER_BINARY: "{{ container_binary }}"
     with_items: "{{ lvm_volumes }}"
@@ -311,7 +311,7 @@
       data: "{{ item }}"
       action: "zap"
     environment:
-      CEPH_VOLUME_DEBUG: 1
+      CEPH_VOLUME_DEBUG: "{{ ceph_volume_debug }}"
       CEPH_CONTAINER_IMAGE: "{{ ceph_docker_registry }}/{{ ceph_docker_image }}:{{ ceph_docker_image_tag }}"
       CEPH_CONTAINER_BINARY: "{{ container_binary }}"
     with_items: "{{ devices | default([]) }}"
@@ -656,13 +656,15 @@
   become: true
 
   tasks:
-  - name: purge ceph directories for "{{ ansible_hostname }}"
+  - name: purge ceph directories for "{{ ansible_hostname }}" and ceph socket
     file:
       path: "{{ item }}"
       state: absent
     with_items:
       - /etc/ceph
       - /var/log/ceph
+      - /run/ceph
+      - "{{ ceph_osd_docker_run_script_path | default('/usr/share') }}/ceph-osd-run.sh"
 
   - name: remove ceph data
     shell: rm -rf /var/lib/ceph/*
@@ -688,5 +690,5 @@
 
   - name: purge fetch directory for localhost
     file:
-      path: "{{ fetch_directory }}/"
+      path: "{{ fetch_directory | default('fetch/') }}/"
       state: absent

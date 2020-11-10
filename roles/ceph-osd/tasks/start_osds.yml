@@ -19,12 +19,12 @@
   changed_when: false
   register: osd_ids_non_container
 
-- name: set_fact docker_exec_start_osd
+- name: set_fact container_exec_start_osd
   set_fact:
-    docker_exec_start_osd: "{{ '{{ container_binary }} run --rm --net=host --privileged=true -v /var/run/udev/:/var/run/udev/:z -v /run/lvm/:/run/lvm/ -v /etc/ceph:/etc/ceph:z -v /dev:/dev --entrypoint=ceph-volume ' + ceph_docker_registry + '/' + ceph_docker_image + ':' + ceph_docker_image_tag if containerized_deployment else 'ceph-volume' }}"
+    container_exec_start_osd: "{{ container_binary + ' run --rm --net=host --privileged=true -v /var/run/udev/:/var/run/udev/:z -v /run/lvm/:/run/lvm/ -v /etc/ceph:/etc/ceph:z -v /dev:/dev --entrypoint=ceph-volume ' + ceph_docker_registry + '/' + ceph_docker_image + ':' + ceph_docker_image_tag if containerized_deployment | bool else 'ceph-volume' }}"
 
 - name: collect osd ids
-  command: "{{ docker_exec_start_osd }} lvm list --format json"
+  command: "{{ container_exec_start_osd }} lvm list --format json"
   changed_when: false
   failed_when: false
   register: ceph_osd_ids
@@ -32,15 +32,6 @@
 - name: include_tasks systemd.yml
   include_tasks: systemd.yml
   when: containerized_deployment | bool
-
-- name: systemd start osd
-  systemd:
-    name: ceph-osd@{{ item }}
-    state: started
-    enabled: yes
-    masked: no
-    daemon_reload: yes
-  with_items: "{{ ((ceph_osd_ids.stdout | default('{}') | from_json).keys() | list) + osd_ids_non_container.stdout_lines | default([]) }}"
 
 - name: ensure systemd service override directory exists
   file:
@@ -59,3 +50,12 @@
   when:
     - ceph_osd_systemd_overrides is defined
     - ansible_service_mgr == 'systemd'
+
+- name: systemd start osd
+  systemd:
+    name: ceph-osd@{{ item }}
+    state: started
+    enabled: yes
+    masked: no
+    daemon_reload: yes
+  with_items: "{{ ((ceph_osd_ids.stdout | default('{}') | from_json).keys() | list) | union(osd_ids_non_container.stdout_lines | default([])) }}"

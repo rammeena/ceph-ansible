@@ -4,10 +4,9 @@
     - name: create openstack pool(s)
       ceph_pool:
         name: "{{ item.name }}"
-        state: present
         cluster: "{{ cluster }}"
-        pg_num: "{{ item.pg_num | default(osd_pool_default_pg_num) if not item.0.pg_autoscale_mode | default(False) | bool else 16 }}"
-        pgp_num: "{{ item.pgp_num | default(item.pg_num) | default(osd_pool_default_pg_num) if not item.pg_autoscale_mode | default(False) | bool else omit }}"
+        pg_num: "{{ item.pg_num | default(omit) }}"
+        pgp_num: "{{ item.pgp_num | default(omit) }}"
         size: "{{ item.size | default(omit) }}"
         min_size: "{{ item.min_size | default(omit) }}"
         pool_type: "{{ item.type | default('replicated') }}"
@@ -26,12 +25,11 @@
   block:
     - name: generate keys
       ceph_key:
-        state: present
         name: "{{ item.name }}"
         caps: "{{ item.caps }}"
         secret: "{{ item.key | default('') }}"
         cluster: "{{ cluster }}"
-        mode: "{{ item.mode|default(omit) }}"
+        mode: "{{ item.mode | default(ceph_keyring_permissions) }}"
       environment:
         CEPH_CONTAINER_IMAGE: "{{ ceph_docker_registry + '/' + ceph_docker_image + ':' + ceph_docker_image_tag if containerized_deployment else None }}"
         CEPH_CONTAINER_BINARY: "{{ container_binary }}"
@@ -49,9 +47,9 @@
       copy:
         dest: "/etc/ceph/{{ cluster }}.{{ item.0.item.name }}.keyring"
         content: "{{ item.0.stdout + '\n' }}"
-        owner: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
-        group: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
-        mode: "{{ item.0.item.mode }}"
+        owner: "{{ ceph_uid if containerized_deployment | bool else 'ceph' }}"
+        group: "{{ ceph_uid if containerized_deployment | bool else 'ceph' }}"
+        mode: "{{ item.0.item.mode | default(ceph_keyring_permissions) }}"
       with_nested:
         - "{{ _osp_keys.results }}"
         - "{{ groups[mon_group_name] }}"

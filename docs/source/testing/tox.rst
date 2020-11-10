@@ -21,18 +21,15 @@ runs of ``ceph-ansible``.
 
 The following environent variables are available for use:
 
-* ``FETCH_DIRECTORY`` : (default: ``changedir``) This would configure the ``ceph-ansible`` variable ``fetch_directory``. This defaults to
-  the ``changedir`` of the given scenario and should not need to be changed.
-
 * ``CEPH_STABLE_RELEASE``: (default: ``jewel``) This would configure the ``ceph-ansible`` variable ``ceph_stable_relese``. This is set
   automatically when using the ``jewel-*`` or ``kraken-*`` testing scenarios.
 
 * ``UPDATE_CEPH_STABLE_RELEASE``: (default: ``kraken``) This would configure the ``ceph-ansible`` variable ``ceph_stable_relese`` during an ``update``
   scenario. This is set automatically when using the ``jewel-*`` or ``kraken-*`` testing scenarios.
 
-* ``CEPH_DOCKER_REGISTRY``: (default: ``docker.io``) This would configure the ``ceph-ansible`` variable ``ceph_docker_registry``.
+* ``CEPH_DOCKER_REGISTRY``: (default: ``quay.ceph.io``) This would configure the ``ceph-ansible`` variable ``ceph_docker_registry``.
 
-* ``CEPH_DOCKER_IMAGE``: (default: ``ceph/daemon``) This would configure the ``ceph-ansible`` variable ``ceph_docker_image``.
+* ``CEPH_DOCKER_IMAGE``: (default: ``ceph-ci/daemon``) This would configure the ``ceph-ansible`` variable ``ceph_docker_image``.
 
 * ``CEPH_DOCKER_IMAGE_TAG``: (default: ``latest``) This would configure the ``ceph-ansible`` variable ``ceph_docker_image_name``.
 

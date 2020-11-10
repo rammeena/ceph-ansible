@@ -1,9 +1,9 @@
 import sys
-sys.path.append('./library')
-import ceph_volume
 import mock
 import os
 import pytest
+sys.path.append('./library')
+import ceph_volume  # noqa: E402
 
 
 # Python 3
@@ -65,7 +65,7 @@ class TestCephVolumeModule(object):
 
     def test_container_exec(self):
         fake_binary = "ceph-volume"
-        fake_container_image = "docker.io/ceph/daemon:latest"
+        fake_container_image = "quay.ceph.io/ceph-ci/daemon:latest"
         expected_command_list = container_cmd + [fake_container_image]
         result = ceph_volume.container_exec(fake_binary, fake_container_image)
         assert result == expected_command_list
@@ -73,7 +73,7 @@ class TestCephVolumeModule(object):
     def test_zap_osd_container(self):
         fake_module = MagicMock()
         fake_module.params = {'data': '/dev/sda'}
-        fake_container_image = "docker.io/ceph/daemon:latest"
+        fake_container_image = "quay.ceph.io/ceph-ci/daemon:latest"
         expected_command_list = container_cmd + [fake_container_image,
                                                  '--cluster',
                                                  'ceph',
@@ -140,7 +140,7 @@ class TestCephVolumeModule(object):
     def test_list_osd_container(self):
         fake_module = MagicMock()
         fake_module.params = {'cluster': 'ceph', 'data': '/dev/sda'}
-        fake_container_image = "docker.io/ceph/daemon:latest"
+        fake_container_image = "quay.ceph.io/ceph-ci/daemon:latest"
         expected_command_list = container_cmd + [fake_container_image,
                                                  '--cluster',
                                                  'ceph',
@@ -165,7 +165,7 @@ class TestCephVolumeModule(object):
 
     def test_list_storage_inventory_container(self):
         fake_module = MagicMock()
-        fake_container_image = "docker.io/ceph/daemon:latest"
+        fake_container_image = "quay.ceph.io/ceph-ci/daemon:latest"
         expected_command_list = container_cmd + [fake_container_image,
                                                  '--cluster',
                                                  'ceph',
@@ -174,7 +174,7 @@ class TestCephVolumeModule(object):
         result = ceph_volume.list_storage_inventory(fake_module, fake_container_image)
         assert result == expected_command_list
 
-    @pytest.mark.parametrize('objectstore', ['bluestore','filestore'])
+    @pytest.mark.parametrize('objectstore', ['bluestore', 'filestore'])
     def test_create_osd_container(self, objectstore):
         fake_module = MagicMock()
         fake_module.params = {'data': '/dev/sda',
@@ -182,7 +182,7 @@ class TestCephVolumeModule(object):
                               'cluster': 'ceph', }
 
         fake_action = "create"
-        fake_container_image = "docker.io/ceph/daemon:latest"
+        fake_container_image = "quay.ceph.io/ceph-ci/daemon:latest"
         expected_command_list = container_cmd + [fake_container_image,
                                                  '--cluster',
                                                  'ceph',
@@ -195,7 +195,7 @@ class TestCephVolumeModule(object):
             fake_module, fake_action, fake_container_image)
         assert result == expected_command_list
 
-    @pytest.mark.parametrize('objectstore', ['bluestore','filestore'])
+    @pytest.mark.parametrize('objectstore', ['bluestore', 'filestore'])
     def test_create_osd(self, objectstore):
         fake_module = MagicMock()
         fake_module.params = {'data': '/dev/sda',
@@ -216,7 +216,7 @@ class TestCephVolumeModule(object):
             fake_module, fake_action, fake_container_image)
         assert result == expected_command_list
 
-    @pytest.mark.parametrize('objectstore', ['bluestore','filestore'])
+    @pytest.mark.parametrize('objectstore', ['bluestore', 'filestore'])
     def test_prepare_osd_container(self, objectstore):
         fake_module = MagicMock()
         fake_module.params = {'data': '/dev/sda',
@@ -224,7 +224,7 @@ class TestCephVolumeModule(object):
                               'cluster': 'ceph', }
 
         fake_action = "prepare"
-        fake_container_image = "docker.io/ceph/daemon:latest"
+        fake_container_image = "quay.ceph.io/ceph-ci/daemon:latest"
         expected_command_list = container_cmd + [fake_container_image,
                                                  '--cluster',
                                                  'ceph',
@@ -237,7 +237,7 @@ class TestCephVolumeModule(object):
             fake_module, fake_action, fake_container_image)
         assert result == expected_command_list
 
-    @pytest.mark.parametrize('objectstore', ['bluestore','filestore'])
+    @pytest.mark.parametrize('objectstore', ['bluestore', 'filestore'])
     def test_prepare_osd(self, objectstore):
         fake_module = MagicMock()
         fake_module.params = {'data': '/dev/sda',
@@ -258,7 +258,7 @@ class TestCephVolumeModule(object):
             fake_module, fake_action, fake_container_image)
         assert result == expected_command_list
 
-    @pytest.mark.parametrize('objectstore', ['bluestore','filestore'])
+    @pytest.mark.parametrize('objectstore', ['bluestore', 'filestore'])
     def test_batch_osd_container(self, objectstore):
         fake_module = MagicMock()
         fake_module.params = {'data': '/dev/sda',
@@ -268,7 +268,7 @@ class TestCephVolumeModule(object):
                               'cluster': 'ceph',
                               'batch_devices': ["/dev/sda", "/dev/sdb"]}
 
-        fake_container_image = "docker.io/ceph/daemon:latest"
+        fake_container_image = "quay.ceph.io/ceph-ci/daemon:latest"
         expected_command_list = container_cmd + [fake_container_image,
                                                  '--cluster',
                                                  'ceph',
@@ -285,7 +285,7 @@ class TestCephVolumeModule(object):
             fake_module, fake_container_image)
         assert result == expected_command_list
 
-    @pytest.mark.parametrize('objectstore', ['bluestore','filestore'])
+    @pytest.mark.parametrize('objectstore', ['bluestore', 'filestore'])
     def test_batch_osd(self, objectstore):
         fake_module = MagicMock()
         fake_module.params = {'data': '/dev/sda',

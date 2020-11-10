@@ -20,18 +20,11 @@ ceph_conf_overrides:
 openstack_config: True
 openstack_glance_pool:
   name: "images"
-  pg_num: "{{ osd_pool_default_pg_num }}"
-  pgp_num: "{{ osd_pool_default_pg_num }}"
-  type: 3
   size: 1
-  pg_autoscale_mode: True
   target_size_ratio: 0.2
 openstack_cinder_pool:
   name: "volumes"
-  pg_num: "{{ osd_pool_default_pg_num }}"
-  pgp_num: "{{ osd_pool_default_pg_num }}"
   rule_name: "HDD"
-  type: 1
   size: 1
 openstack_pools:
   - "{{ openstack_glance_pool }}"
@@ -42,3 +35,10 @@ handler_health_osd_check_delay: 10
 mds_max_mds: 2
 dashboard_admin_password: $sX!cD$rYU6qR^B!
 grafana_admin_password: +xFRe+RES@7vg24n
+ceph_docker_registry: quay.ceph.io
+ceph_docker_image: ceph-ci/daemon
+ceph_docker_image_tag: latest-octopus
+node_exporter_container_image: "quay.io/prometheus/node-exporter:v0.17.0"
+prometheus_container_image: "quay.io/prometheus/prometheus:v2.7.2"
+alertmanager_container_image: "quay.io/prometheus/alertmanager:v0.16.2"
+grafana_container_image: "quay.io/app-sre/grafana:5.4.3"

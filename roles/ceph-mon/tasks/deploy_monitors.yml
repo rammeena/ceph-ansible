@@ -25,11 +25,11 @@
 - name: get initial keyring when it already exists
   set_fact:
     monitor_keyring: "{{ initial_mon_key.stdout if monitor_keyring.skipped is defined else monitor_keyring.stdout if initial_mon_key.skipped is defined }}"
+  when: initial_mon_key is not skipped or monitor_keyring is not skipped
 
 - name: create monitor initial keyring
   ceph_key:
     name: mon.
-    state: present
     dest: "/var/lib/ceph/tmp/"
     secret: "{{ monitor_keyring }}"
     cluster: "{{ cluster }}"
@@ -50,19 +50,30 @@
   changed_when: false
   when: containerized_deployment | bool
 
-- name: create (and fix ownership of) monitor directory
+- name: create monitor directory
   file:
     path: /var/lib/ceph/mon/{{ cluster }}-{{ monitor_name }}
     state: directory
     owner: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
     group: "{{ ceph_uid if containerized_deployment else 'ceph' }}"
     mode: "{{ ceph_directories_mode }}"
+
+# We don't do the recursion in the task above to avoid setting `mode` (which
+# defaults to 0755) on files.
+#
+# This is only needed when upgrading from older versions of Ceph that used to
+# run as `root` (https://github.com/ceph/ceph-ansible/issues/1635).
+- name: recursively fix ownership of monitor directory
+  file:
+    path: /var/lib/ceph/mon/{{ cluster }}-{{ monitor_name }}
+    state: directory
+    owner: "{{ ceph_uid if containerized_deployment | bool else 'ceph' }}"
+    group: "{{ ceph_uid if containerized_deployment | bool else 'ceph' }}"
     recurse: true
 
 - name: create custom admin keyring
   ceph_key:
     name: client.admin
-    state: present
     secret: "{{ admin_secret }}"
     caps: "{{ client_admin_ceph_authtool_cap }}"
     import_key: False

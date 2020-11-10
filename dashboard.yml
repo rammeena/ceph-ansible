@@ -1,5 +1,14 @@
 ---
-- hosts: all
+- hosts:
+    - "{{ mon_group_name|default('mons') }}"
+    - "{{ osd_group_name|default('osds') }}"
+    - "{{ mds_group_name|default('mdss') }}"
+    - "{{ rgw_group_name|default('rgws') }}"
+    - "{{ mgr_group_name|default('mgrs') }}"
+    - "{{ rbdmirror_group_name|default('rbdmirrors') }}"
+    - "{{ nfs_group_name|default('nfss') }}"
+    - "{{ iscsi_gw_group_name|default('iscsigws') }}"
+    - "{{ grafana_server_group_name|default('grafana-server') }}"
   gather_facts: false
   become: true
   pre_tasks:

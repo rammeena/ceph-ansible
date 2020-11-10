@@ -88,15 +88,15 @@
     - name: ensure cephfs mountpoint(s) are unmounted
       command: umount -a -t ceph
 
-    - name: check if rbdmap is still installed
-      command: command -v rbdmap
-      register: command_rbdmap
-      failed_when: false
-      changed_when: false
+    - name: find mapped rbd ids
+      find:
+        paths: /sys/bus/rbd/devices
+        file_type: any
+      register: rbd_mapped_ids
 
-    - name: ensure rbd devices are unmapped
-      command: rbdmap unmap-all
-      when: command_rbdmap.rc == 0
+    - name: use sysfs to unmap rbd devices
+      shell: "echo {{ item.path | basename }} > /sys/bus/rbd/remove_single_major"
+      with_items: "{{ rbd_mapped_ids.files }}"
 
     - name: unload ceph kernel modules
       modprobe:
@@ -377,6 +377,9 @@
 
   tasks:
 
+  - import_role:
+      name: ceph-defaults
+
   - name: default lvm_volumes if not defined
     set_fact:
       lvm_volumes: []
@@ -499,7 +502,7 @@
       wal_vg: "{{ item.wal_vg|default(omit) }}"
       action: "zap"
     environment:
-      CEPH_VOLUME_DEBUG: 1
+      CEPH_VOLUME_DEBUG: "{{ ceph_volume_debug }}"
     with_items: "{{ lvm_volumes }}"
     when:
       - lvm_volumes | default([]) | length > 0
@@ -510,7 +513,7 @@
       data: "{{ item }}"
       action: "zap"
     environment:
-      CEPH_VOLUME_DEBUG: 1
+      CEPH_VOLUME_DEBUG: "{{ ceph_volume_debug }}"
     with_items: "{{ devices | default([]) }}"
     when:
       - devices | default([]) | length > 0
@@ -778,7 +781,7 @@
       - ansible_pkg_mgr == 'apt'
       - purge_all_packages == true
 
-  - name: remove config
+  - name: remove config and any ceph socket left
     file:
       path: "{{ item }}"
       state: absent
@@ -786,6 +789,7 @@
       - /etc/ceph
       - /etc/keepalived
       - /etc/haproxy
+      - /run/ceph
 
   - name: remove logs
     file:
@@ -858,5 +862,5 @@
 
   - name: purge fetch directory for localhost
     file:
-      path: "{{ fetch_directory }}"
+      path: "{{ fetch_directory | default('fetch/') }}"
       state: absent

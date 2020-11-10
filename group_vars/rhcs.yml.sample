@@ -32,8 +32,6 @@ dummy:
 #  pacific: 16
 #  dev: 99
 
-# Directory to fetch cluster fsid, keys etc...
-fetch_directory: ~/ceph-ansible-keys
 
 # The 'cluster' variable determines the name of the cluster.
 # Changing the default value to something else means that you will
@@ -76,8 +74,6 @@ fetch_directory: ~/ceph-ansible-keys
 #ceph_dashboard_firewall_zone: public
 #ceph_rgwloadbalancer_firewall_zone: public
 
-# Generate local ceph.conf in fetch directory
-#ceph_conf_local: false
 
 ############
 # PACKAGES #
@@ -220,7 +216,7 @@ ceph_iscsi_config_dev: false
 # a URL to the .repo file to be installed on the targets.  For deb,
 # ceph_custom_repo should be the URL to the repo base.
 #
-#ceph_custom_key: https://server.domain.com/ceph-custom-repo-key.asc
+#ceph_custom_key: https://server.domain.com/ceph-custom-repo/key.asc
 #ceph_custom_repo: https://server.domain.com/ceph-custom-repo
 
 
@@ -246,8 +242,8 @@ ceph_iscsi_config_dev: false
 ## Ceph options
 #
 # Each cluster requires a unique, consistent filesystem ID. By
-# default, the playbook generates one for you and stores it in a file
-# in `fetch_directory`. If you want to customize how the fsid is
+# default, the playbook generates one for you.
+# If you want to customize how the fsid is
 # generated, you may find it useful to disable fsid generation to
 # avoid cluttering up your ansible repo. If you set `generate_fsid` to
 # false, you *must* generate `fsid` in another way.
@@ -257,7 +253,7 @@ ceph_iscsi_config_dev: false
 
 #ceph_conf_key_directory: /etc/ceph
 
-#ceph_uid: 167
+#ceph_uid: "{{ '64045' if not containerized_deployment | bool and ansible_os_family == 'Debian' else '167' }}"
 
 # Permissions for keyring files in /etc/ceph
 #ceph_keyring_permissions: '0600'
@@ -324,6 +320,8 @@ ceph_iscsi_config_dev: false
 #mon_host_v2:
 #  suffix: ':3300'
 
+#enable_ceph_volume_debug: False
+
 ##########
 # CEPHFS #
 ##########
@@ -332,39 +330,12 @@ ceph_iscsi_config_dev: false
 # eg:
 #  cephfs_data_pool:
 #    name: "{{ cephfs_data if cephfs_data is defined else 'cephfs_data' }}"
-#    pg_num: "{{ osd_pool_default_pg_num }}"
-#    pgp_num: "{{ osd_pool_default_pg_num }}"
-#    rule_name: "replicated_rule"
-#    type: 1
-#    erasure_profile: ""
-#    expected_num_objects: ""
-#    size: "{{ osd_pool_default_size }}"
-#    min_size: "{{ osd_pool_default_min_size }}"
-#    pg_autoscale_mode: False
 #    target_size_ratio: 0.2
 #cephfs: cephfs # name of the ceph filesystem
 #cephfs_data_pool:
 #  name: "{{ cephfs_data if cephfs_data is defined else 'cephfs_data' }}"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
-#  size: "{{ osd_pool_default_size }}"
-#  min_size: "{{ osd_pool_default_min_size }}"
-#  pg_autoscale_mode: False
 #cephfs_metadata_pool:
 #  name: "{{ cephfs_metadata if cephfs_metadata is defined else 'cephfs_metadata' }}"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
-#  size: "{{ osd_pool_default_size }}"
-#  min_size: "{{ osd_pool_default_min_size }}"
-#  pg_autoscale_mode: False
 #cephfs_pools:
 #  - "{{ cephfs_data_pool }}"
 #  - "{{ cephfs_metadata_pool }}"
@@ -584,6 +555,9 @@ ceph_docker_registry: "registry.redhat.io"
 ceph_docker_registry_auth: true
 #ceph_docker_registry_username:
 #ceph_docker_registry_password:
+#ceph_docker_http_proxy:
+#ceph_docker_https_proxy:
+#ceph_docker_no_proxy: "localhost,127.0.0.1"
 ## Client only docker image - defaults to {{ ceph_docker_image }}
 #ceph_client_docker_image: "{{ ceph_docker_image }}"
 #ceph_client_docker_image_tag: "{{ ceph_docker_image_tag }}"
@@ -615,101 +589,33 @@ ceph_docker_registry_auth: true
 # eg:
 #  openstack_glance_pool:
 #    name: "images"
-#    pg_num: "{{ osd_pool_default_pg_num }}"
-#    pgp_num: "{{ osd_pool_default_pg_num }}"
-#    rule_name: "replicated_rule"
-#    type: 1
-#    erasure_profile: ""
-#    expected_num_objects: ""
+#    rule_name: "my_replicated_rule"
 #    application: "rbd"
-#    size: "{{ osd_pool_default_size }}"
-#    min_size: "{{ osd_pool_default_min_size }}"
 #    pg_autoscale_mode: False
+#    pg_num: 16
+#    pgp_num: 16
 #    target_size_ratio: 0.2
 #openstack_glance_pool:
 #  name: "images"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
 #  application: "rbd"
-#  size: "{{ osd_pool_default_size }}"
-#  min_size: "{{ osd_pool_default_min_size }}"
-#  pg_autoscale_mode: False
 #openstack_cinder_pool:
 #  name: "volumes"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
 #  application: "rbd"
-#  size: "{{ osd_pool_default_size }}"
-#  min_size: "{{ osd_pool_default_min_size }}"
-#  pg_autoscale_mode: False
 #openstack_nova_pool:
 #  name: "vms"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
 #  application: "rbd"
-#  size: "{{ osd_pool_default_size }}"
-#  min_size: "{{ osd_pool_default_min_size }}"
-#  pg_autoscale_mode: False
 #openstack_cinder_backup_pool:
 #  name: "backups"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
 #  application: "rbd"
-#  size: "{{ osd_pool_default_size }}"
-#  min_size: "{{ osd_pool_default_min_size }}"
-#  pg_autoscale_mode: False
 #openstack_gnocchi_pool:
 #  name: "metrics"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
 #  application: "rbd"
-#  size: "{{ osd_pool_default_size }}"
-#  min_size: "{{ osd_pool_default_min_size }}"
-#  pg_autoscale_mode: False
 #openstack_cephfs_data_pool:
 #  name: "manila_data"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
 #  application: "cephfs"
-#  size: "{{ osd_pool_default_size }}"
-#  min_size: "{{ osd_pool_default_min_size }}"
-#  pg_autoscale_mode: False
 #openstack_cephfs_metadata_pool:
 #  name: "manila_metadata"
-#  pg_num: "{{ osd_pool_default_pg_num }}"
-#  pgp_num: "{{ osd_pool_default_pg_num }}"
-#  rule_name: "replicated_rule"
-#  type: 1
-#  erasure_profile: ""
-#  expected_num_objects: ""
 #  application: "cephfs"
-#  size: "{{ osd_pool_default_size }}"
-#  min_size: "{{ osd_pool_default_min_size }}"
-#  pg_autoscale_mode: False
 #openstack_pools:
 #  - "{{ openstack_glance_pool }}"
 #  - "{{ openstack_cinder_pool }}"
@@ -740,7 +646,7 @@ ceph_docker_registry_auth: true
 # For https, you should set dashboard.crt/key and grafana.crt/key
 # If you define the dashboard_crt and dashboard_key variables, but leave them as '',
 # then we will autogenerate a cert and keyfile
-#dashboard_protocol: http
+#dashboard_protocol: https
 #dashboard_port: 8443
 #dashboard_admin_user: admin
 #dashboard_admin_user_ro: false
@@ -750,7 +656,7 @@ ceph_docker_registry_auth: true
 #dashboard_crt: ''
 #dashboard_key: ''
 #dashboard_tls_external: false
-#dashboard_grafana_api_no_ssl_verify: False
+#dashboard_grafana_api_no_ssl_verify: "{{ true if dashboard_protocol == 'https' and not grafana_crt and not grafana_key else false }}"
 #dashboard_rgw_api_user_id: ceph-dashboard
 #dashboard_rgw_api_admin_resource: ''
 #dashboard_rgw_api_no_ssl_verify: False
@@ -884,4 +790,4 @@ alertmanager_container_image: registry.redhat.io/openshift4/ose-prometheus-alert
 
 #container_exec_cmd:
 #docker: false
-
+#ceph_volume_debug: "{{ enable_ceph_volume_debug | ternary(1, 0)  }}"
